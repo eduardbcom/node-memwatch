@@ -8,16 +8,19 @@
 #include "heapdiff.hh"
 #include "memwatch.hh"
 
+using namespace v8;
+
 extern "C" {
-    void init (v8::Handle<v8::Object> target)
+    void init(Local<Object> exports)
     {
-        v8::Isolate * isolate = target->GetIsolate();
+        Isolate * isolate = exports->GetIsolate();
 
         Nan::HandleScope scope;
-        heapdiff::HeapDiff::Initialize(target);
 
-        Nan::SetMethod(target, "upon_gc", memwatch::upon_gc);
-        Nan::SetMethod(target, "gc", memwatch::trigger_gc);
+        heapdiff::HeapDiff::Initialize(exports);
+        
+        Nan::SetMethod(exports, "upon_gc", memwatch::upon_gc);
+        Nan::SetMethod(exports, "gc", memwatch::trigger_gc);
 
         isolate->AddGCEpilogueCallback(memwatch::after_gc);
     }

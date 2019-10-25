@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "__functional_03": "cpp",
+    "functional": "cpp",
+    "array": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "vector": "cpp"
+  }
+}
