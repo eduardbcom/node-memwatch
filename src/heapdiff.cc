@@ -43,7 +43,7 @@ heapdiff::HeapDiff::~HeapDiff()
 }
 
 void
-heapdiff::HeapDiff::Initialize ( v8::Handle<v8::Object> target )
+heapdiff::HeapDiff::Initialize ( v8::Local<v8::Object> target )
 {
     Nan::HandleScope scope;
 
@@ -223,7 +223,7 @@ static void manageChange(changeset & changes, const HeapGraphNode * node, bool a
     return;
 }
 
-static Handle<Value> changesetToObject(changeset & changes)
+static Local<Value> changesetToObject(changeset & changes)
 {
     Nan::EscapableHandleScope scope;
     Local<Array> a = Nan::New<v8::Array>();
