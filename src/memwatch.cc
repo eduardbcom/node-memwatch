@@ -250,9 +250,7 @@ NAN_METHOD(memwatch::trigger_gc) {
     Nan::HandleScope scope;
     int deadline_in_ms = 500;
     if (info.Length() >= 1 && info[0]->IsNumber()) {
-            // v8::Local<v8::Context> context = Nan::GetCurrentContext();
-    		// deadline_in_ms = (int)(info[0]->Int32Value());
-            deadline_in_ms = (int)(Nan::To<int32_t>(info[0]).FromJust());
+        deadline_in_ms = (int)(Nan::To<int32_t>(info[0]).FromJust());
     }
 #if (NODE_MODULE_VERSION >= 0x002D)
     Nan::IdleNotification(deadline_in_ms);
