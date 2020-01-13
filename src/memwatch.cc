@@ -253,7 +253,7 @@ NAN_METHOD(memwatch::trigger_gc) {
             v8::Local<v8::Context> context = Nan::GetCurrentContext();
     		// deadline_in_ms = (int)(info[0]->Int32Value());
 
-    		deadline_in_ms =  (Nan::Maybe<int32_t>)Int32Value(v8::Local<v8::Value> info[0]);
+    		deadline_in_ms =  (int)Int32Value(info[0]);
     }
 #if (NODE_MODULE_VERSION >= 0x002D)
     Nan::IdleNotification(deadline_in_ms);
