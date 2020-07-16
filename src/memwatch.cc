@@ -20,7 +20,7 @@
 using namespace v8;
 using namespace node;
 
-Handle<Object> g_context;
+Local<Object> g_context;
 Nan::Callback *g_cb;
 
 struct Baton {
@@ -76,14 +76,14 @@ static Local<Value> getLeakReport(size_t heapUsage)
     Local<Object> leakReport = Nan::New<v8::Object>();
     //leakReport->Set(Nan::New("start").ToLocalChecked(), NODE_UNIXTIME_V8(s_stats.leak_time_start));
     //leakReport->Set(Nan::New("end").ToLocalChecked(), NODE_UNIXTIME_V8(now));
-    leakReport->Set(Nan::New("growth").ToLocalChecked(), Nan::New<v8::Number>(growth));
+    Nan::Set(leakReport, Nan::New("growth").ToLocalChecked(), Nan::New<v8::Number>(growth));
 
     std::stringstream ss;
     ss << "heap growth over 5 consecutive GCs ("
        << mw_util::niceDelta(delta) << ") - "
        << mw_util::niceSize(growth / ((double) delta / (60.0 * 60.0))) << "/hr";
 
-    leakReport->Set(Nan::New("reason").ToLocalChecked(), Nan::New(ss.str().c_str()).ToLocalChecked());
+    Nan::Set(leakReport, Nan::New("reason").ToLocalChecked(), Nan::New(ss.str().c_str()).ToLocalChecked());
 
     return scope.Escape(leakReport);
 }
@@ -190,14 +190,14 @@ static void AsyncMemwatchAfter(uv_work_t* request) {
 
             // ok, there are listeners, we actually must serialize and emit this stats event
             Local<Object> stats = Nan::New<v8::Object>();
-            stats->Set(Nan::New("num_full_gc").ToLocalChecked(), Nan::New(s_stats.gc_full));
-            stats->Set(Nan::New("num_inc_gc").ToLocalChecked(), Nan::New(s_stats.gc_inc));
-            stats->Set(Nan::New("heap_compactions").ToLocalChecked(), Nan::New(s_stats.gc_compact));
-            stats->Set(Nan::New("usage_trend").ToLocalChecked(), Nan::New(ut));
-            stats->Set(Nan::New("estimated_base").ToLocalChecked(), Nan::New(s_stats.base_recent));
-            stats->Set(Nan::New("current_base").ToLocalChecked(), Nan::New(s_stats.last_base));
-            stats->Set(Nan::New("min").ToLocalChecked(), Nan::New(s_stats.base_min));
-            stats->Set(Nan::New("max").ToLocalChecked(), Nan::New(s_stats.base_max));
+            Nan::Set(stats, Nan::New("num_full_gc").ToLocalChecked(), Nan::New(s_stats.gc_full));
+            Nan::Set(stats, Nan::New("num_inc_gc").ToLocalChecked(), Nan::New(s_stats.gc_inc));
+            Nan::Set(stats, Nan::New("heap_compactions").ToLocalChecked(), Nan::New(s_stats.gc_compact));
+            Nan::Set(stats, Nan::New("usage_trend").ToLocalChecked(), Nan::New(ut));
+            Nan::Set(stats, Nan::New("estimated_base").ToLocalChecked(), Nan::New(s_stats.base_recent));
+            Nan::Set(stats, Nan::New("current_base").ToLocalChecked(), Nan::New(s_stats.last_base));
+            Nan::Set(stats, Nan::New("min").ToLocalChecked(), Nan::New(s_stats.base_min));
+            Nan::Set(stats, Nan::New("max").ToLocalChecked(), Nan::New(s_stats.base_max));
             argv[0] = Nan::New<v8::Boolean>(false);
             // the type of event to emit
             argv[1] = Nan::New("stats").ToLocalChecked();
@@ -250,7 +250,7 @@ NAN_METHOD(memwatch::trigger_gc) {
     Nan::HandleScope scope;
     int deadline_in_ms = 500;
     if (info.Length() >= 1 && info[0]->IsNumber()) {
-    		deadline_in_ms = (int)(info[0]->Int32Value());
+        deadline_in_ms = (int)(Nan::To<int32_t>(info[0]).FromJust());
     }
 #if (NODE_MODULE_VERSION >= 0x002D)
     Nan::IdleNotification(deadline_in_ms);

@@ -1,14 +1,14 @@
 {
-  "name": "node-memwatch",
+  "name": "node-memwatch-sfx",
   "description": "Keep an eye on your memory usage, and discover and isolate leaks.",
-  "version": "1.0.0",
-  "author": "Lloyd Hilaiel (http://lloyd.io)",
+  "version": "1.0.0-sfx1",
+  "author": "SignalFx",
   "engines": {
     "node": ">= 9"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/eduardbcom/node-memwatch.git"
+    "url": "https://github.com/signalfx/node-memwatch.git"
   },
   "main": "include.js",
   "licenses": [
@@ -27,14 +27,8 @@
     "mocha": "^2.4.5",
     "should": "^8.3.1"
   },
-  "contributors": [
-    "Jed Parsons (@jedp)",
-    "Jeff Haynie (@jhaynie)",
-    "Justin Matthews (@jmatthewsr-ms)",
-    "Eduard Bondarenko (@eduardbcom)"
-  ],
   "dependencies": {
-    "bindings": "^1.2.1",
-    "nan": "^2.3.2"
+    "bindings": "^1.5.0",
+    "nan": "^2.14.1"
   }
 }

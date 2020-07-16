@@ -43,7 +43,7 @@ heapdiff::HeapDiff::~HeapDiff()
 }
 
 void
-heapdiff::HeapDiff::Initialize ( v8::Handle<v8::Object> target )
+heapdiff::HeapDiff::Initialize ( v8::Local<v8::Object> target )
 {
     Nan::HandleScope scope;
 
@@ -53,7 +53,9 @@ heapdiff::HeapDiff::Initialize ( v8::Handle<v8::Object> target )
 
     Nan::SetPrototypeMethod(t, "end", End);
 
-    target->Set(Nan::New<v8::String>("HeapDiff").ToLocalChecked(), t->GetFunction());
+    Nan::Set(target, Nan::New<v8::String>("HeapDiff").ToLocalChecked(), t->GetFunction(
+        Nan::GetCurrentContext()
+    ).ToLocalChecked());
 }
 
 NAN_METHOD(heapdiff::HeapDiff::New)
@@ -92,11 +94,7 @@ NAN_METHOD(heapdiff::HeapDiff::New)
 
 static string handleToStr(const Local<Value> & str)
 {
-    v8::Isolate* isolate = v8::Isolate::GetCurrent();
-
-	String::Utf8Value utfString(isolate, str->ToString());
-
-	return *utfString;
+    return *Nan::Utf8String(str);
 }
 
 static void
@@ -223,19 +221,19 @@ static void manageChange(changeset & changes, const HeapGraphNode * node, bool a
     return;
 }
 
-static Handle<Value> changesetToObject(changeset & changes)
+static Local<Value> changesetToObject(changeset & changes)
 {
     Nan::EscapableHandleScope scope;
     Local<Array> a = Nan::New<v8::Array>();
 
     for (changeset::iterator i = changes.begin(); i != changes.end(); i++) {
         Local<Object> d = Nan::New<v8::Object>();
-        d->Set(Nan::New("what").ToLocalChecked(), Nan::New(i->first.c_str()).ToLocalChecked());
-        d->Set(Nan::New("size_bytes").ToLocalChecked(), Nan::New<v8::Number>(i->second.size));
-        d->Set(Nan::New("size").ToLocalChecked(), Nan::New(mw_util::niceSize(i->second.size).c_str()).ToLocalChecked());
-        d->Set(Nan::New("+").ToLocalChecked(), Nan::New<v8::Number>(i->second.added));
-        d->Set(Nan::New("-").ToLocalChecked(), Nan::New<v8::Number>(i->second.released));
-        a->Set(a->Length(), d);
+        Nan::Set(d, Nan::New("what").ToLocalChecked(), Nan::New(i->first.c_str()).ToLocalChecked());
+        Nan::Set(d, Nan::New("size_bytes").ToLocalChecked(), Nan::New<v8::Number>(i->second.size));
+        Nan::Set(d, Nan::New("size").ToLocalChecked(), Nan::New(mw_util::niceSize(i->second.size).c_str()).ToLocalChecked());
+        Nan::Set(d, Nan::New("+").ToLocalChecked(), Nan::New<v8::Number>(i->second.added));
+        Nan::Set(d, Nan::New("-").ToLocalChecked(), Nan::New<v8::Number>(i->second.released));
+        Nan::Set(d, a->Length(), d);
     }
 
     return scope.Escape(a);
@@ -252,39 +250,39 @@ compare(const v8::HeapSnapshot * before, const v8::HeapSnapshot * after)
 
     // first let's append summary information
     Local<Object> b = Nan::New<v8::Object>();
-    b->Set(Nan::New("nodes").ToLocalChecked(), Nan::New(before->GetNodesCount()));
+    Nan::Set(b, Nan::New("nodes").ToLocalChecked(), Nan::New(before->GetNodesCount()));
     //b->Set(Nan::New("time"), s_startTime);
-    o->Set(Nan::New("before").ToLocalChecked(), b);
+    Nan::Set(o, Nan::New("before").ToLocalChecked(), b);
 
     Local<Object> a = Nan::New<v8::Object>();
-    a->Set(Nan::New("nodes").ToLocalChecked(), Nan::New(after->GetNodesCount()));
+    Nan::Set(a, Nan::New("nodes").ToLocalChecked(), Nan::New(after->GetNodesCount()));
     //a->Set(Nan::New("time"), time(NULL));
-    o->Set(Nan::New("after").ToLocalChecked(), a);
+    Nan::Set(o, Nan::New("after").ToLocalChecked(), a);
 
     // now let's get allocations by name
     set<uint64_t> beforeIDs, afterIDs;
     s = 0;
     buildIDSet(&beforeIDs, before->GetRoot(), s);
-    b->Set(Nan::New("size_bytes").ToLocalChecked(), Nan::New(s));
-    b->Set(Nan::New("size").ToLocalChecked(), Nan::New(mw_util::niceSize(s).c_str()).ToLocalChecked());
+    Nan::Set(b, Nan::New("size_bytes").ToLocalChecked(), Nan::New(s));
+    Nan::Set(b, Nan::New("size").ToLocalChecked(), Nan::New(mw_util::niceSize(s).c_str()).ToLocalChecked());
 
     diffBytes = s;
     s = 0;
     buildIDSet(&afterIDs, after->GetRoot(), s);
-    a->Set(Nan::New("size_bytes").ToLocalChecked(), Nan::New(s));
-    a->Set(Nan::New("size").ToLocalChecked(), Nan::New(mw_util::niceSize(s).c_str()).ToLocalChecked());
+    Nan::Set(a, Nan::New("size_bytes").ToLocalChecked(), Nan::New(s));
+    Nan::Set(a, Nan::New("size").ToLocalChecked(), Nan::New(mw_util::niceSize(s).c_str()).ToLocalChecked());
 
     diffBytes = s - diffBytes;
 
     Local<Object> c = Nan::New<v8::Object>();
-    c->Set(Nan::New("size_bytes").ToLocalChecked(), Nan::New(diffBytes));
-    c->Set(Nan::New("size").ToLocalChecked(), Nan::New(mw_util::niceSize(diffBytes).c_str()).ToLocalChecked());
-    o->Set(Nan::New("change").ToLocalChecked(), c);
+    Nan::Set(c, Nan::New("size_bytes").ToLocalChecked(), Nan::New(diffBytes));
+    Nan::Set(c, Nan::New("size").ToLocalChecked(), Nan::New(mw_util::niceSize(diffBytes).c_str()).ToLocalChecked());
+    Nan::Set(o, Nan::New("change").ToLocalChecked(), c);
 
     // before - after will reveal nodes released (memory freed)
     vector<uint64_t> changedIDs;
     setDiff(beforeIDs, afterIDs, changedIDs);
-    c->Set(Nan::New("freed_nodes").ToLocalChecked(), Nan::New<v8::Number>(changedIDs.size()));
+    Nan::Set(c, Nan::New("freed_nodes").ToLocalChecked(), Nan::New<v8::Number>(changedIDs.size()));
 
     // here's where we'll collect all the summary information
     changeset changes;
@@ -300,14 +298,14 @@ compare(const v8::HeapSnapshot * before, const v8::HeapSnapshot * after)
     // after - before will reveal nodes added (memory allocated)
     setDiff(afterIDs, beforeIDs, changedIDs);
 
-    c->Set(Nan::New("allocated_nodes").ToLocalChecked(), Nan::New<v8::Number>(changedIDs.size()));
+    Nan::Set(c, Nan::New("allocated_nodes").ToLocalChecked(), Nan::New<v8::Number>(changedIDs.size()));
 
     for (unsigned long i = 0; i < changedIDs.size(); i++) {
         const HeapGraphNode * n = after->GetNodeById(changedIDs[i]);
         manageChange(changes, n, true);
     }
 
-    c->Set(Nan::New("details").ToLocalChecked(), changesetToObject(changes));
+    Nan::Set(c, Nan::New("details").ToLocalChecked(), changesetToObject(changes));
 
     return scope.Escape(o);
 }
